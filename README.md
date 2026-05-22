@@ -23,7 +23,7 @@ H   H  A   A  CCCC   K   K  LLLLL  A   A  BBBB
 ### From source
 
 ```bash
-git clone https://github.com/ImShad0w/HackLab.git
+git clone https://github.com/HackLab-cli/hacklab.git
 cd hacklab
 go build -o hacklab .
 sudo mv hacklab /usr/local/bin/
@@ -32,7 +32,7 @@ sudo mv hacklab /usr/local/bin/
 ### Go install
 
 ```bash
-go install github.com/ImShad0w/hacklab@latest
+go install github.com/HackLab-cli/hacklab@latest
 ```
 
 ### Verify
@@ -52,17 +52,6 @@ hacklab --help
 | `hacklab stop <slug>` | Tear down a lab's containers |
 | `hacklab add <source>` | Install a lab from a git repo or local path |
 | `hacklab remove <slug>` | Remove a lab from your collection |
-
-Example list output with column headers:
-
-```
-  SLUG (start <this>)  LAB NAME                            DIFFICULTY    OBJECTIVES  TYPE
-  ──────────────────  ──────────────────────────────────  ────────────  ──────────  ─────────────
-  🎯 juice-shop          OWASP Juice Shop                    beginner  ·  5 objectives  ·  single container
-  🎯 jwt-lab             JWT Token Hacking Lab               beginner  ·  4 objectives  ·  single container
-```
-
-> **The first column (slug) is what you type after `hacklab start`.**
 
 ## Interactive TUI
 
@@ -180,28 +169,6 @@ Drop a `docker-compose.yml` in the same directory. Containers are automatically 
 | `category` | No | Tag shown next to the objective |
 | `hint` | No | Single hint string |
 | `hints` | No | List of progressive hints |
-
-## Bundled Labs
-
-`labs/examples/` ships with 8 ready-to-hack labs:
-
-| Slug | Name | Difficulty | Type |
-|------|------|-----------|------|
-| `juice-shop` | OWASP Juice Shop | beginner | single container |
-| `sqli-lab` | SQL Injection Lab | beginner | docker-compose |
-| `jwt-lab` | JWT Token Hacking Lab | beginner | single container |
-| `file-upload-lab` | Unrestricted File Upload Lab | intermediate | single container |
-| `api-lab` | REST API Security Lab | intermediate | single container |
-| `crypto-lab` | Cryptography Challenges Lab | intermediate | single container |
-| `privesc-lab` | Linux Privilege Escalation Lab | intermediate | docker-compose |
-| `docker-lab` | Docker Vulnerable Lab | intermediate | docker-compose |
-
-Install any of them with:
-
-```bash
-hacklab add ./labs/examples/juice-shop
-hacklab start juice-shop
-```
 
 ## Storage
 
