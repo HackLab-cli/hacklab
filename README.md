@@ -83,6 +83,10 @@ Starting a lab opens a fullscreen terminal session. It's a **checklist / todo tr
 
 Progress saves automatically to `~/.hacklab/progress.json`.
 
+## Starting guide
+
+The first time you install `hacklab` without prior labs, it will guide you through the process and how to add some example labs!
+
 ## Lab Format
 
 Labs are directories with a `lab.yml` manifest. Just create a folder, write the YAML, and you've got a lab.

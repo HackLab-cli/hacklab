@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	"hacklab/internal/lab"
+	"hacklab/internal/store"
+	"hacklab/tui"
+
 	"github.com/spf13/cobra"
 )
 
@@ -23,6 +27,31 @@ H   H  A   A  CCCC   K   K  LLLLL  A   A  BBBB
  Spin up vulnerable labs, exploit them, level up.
 `,
 	Version: version,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// If a subcommand was invoked, cobra handles it — this only
+		// runs when no subcommand matched (bare "hacklab").
+		// Check if this is a first-time user with no labs installed.
+		labsDir, err := store.LabsDir()
+		if err != nil {
+			return err
+		}
+
+		hasLabs := false
+		if _, statErr := os.Stat(labsDir); statErr == nil {
+			labs, discoverErr := lab.DiscoverLabs(labsDir)
+			if discoverErr == nil && len(labs) > 0 {
+				hasLabs = true
+			}
+		}
+
+		if !hasLabs {
+			// First run or no labs — launch the tutorial
+			return tui.RunTutorial()
+		}
+
+		// User has labs, show help
+		return cmd.Help()
+	},
 }
 
 func init() {
