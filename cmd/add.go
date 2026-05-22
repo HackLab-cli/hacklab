@@ -12,6 +12,43 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// aliasMap maps shorthand namespaces to their full git repo URLs.
+// When a user runs "hacklab add <alias>/<path>", the alias prefix is
+// expanded to the full repo URL with the path as a subdirectory.
+//
+// Examples:
+//   examples/sqli-lab  →  https://github.com/HackLab-cli/lab-examples#examples/sqli-lab
+//   examples/juice-shop →  https://github.com/HackLab-cli/lab-examples#examples/juice-shop
+//   my-org/sqli-lab    →  https://github.com/my-org/labs#my-org/sqli-lab
+var aliasMap = map[string]string{
+	"examples": "https://github.com/HackLab-cli/lab-examples",
+}
+
+// resolveAlias checks if source matches a known alias prefix (e.g. "examples/sqli-lab").
+// Returns the expanded repo URL and subdir if matched, empty strings otherwise.
+func resolveAlias(source string) (repoURL, subdir string, matched bool) {
+	// Must be a simple path-like string (no scheme, no leading ./ or /)
+	if strings.HasPrefix(source, "./") || strings.HasPrefix(source, "/") ||
+		strings.HasPrefix(source, "http://") || strings.HasPrefix(source, "https://") ||
+		strings.HasPrefix(source, "git@") {
+		return "", "", false
+	}
+
+	// Split by "/" to get the namespace (first segment)
+	parts := strings.SplitN(source, "/", 2)
+	if len(parts) < 2 {
+		return "", "", false
+	}
+	prefix := parts[0]
+
+	repo, ok := aliasMap[prefix]
+	if !ok {
+		return "", "", false
+	}
+
+	return repo, source, true
+}
+
 var addCmd = &cobra.Command{
 	Use:   "add <source>",
 	Short: "Add a lab from git repo, subdirectory, or local path",
@@ -33,6 +70,11 @@ Examples:
 
 		if err := store.Ensure(); err != nil {
 			return err
+		}
+
+		// Resolve alias shorthand (e.g. "examples/sqli-lab" → full git URL)
+		if repoURL, subdir, ok := resolveAlias(source); ok {
+			return addFromGit(repoURL, subdir)
 		}
 
 		// Parse #subdir syntax early, before deciding git vs local
