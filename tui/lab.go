@@ -457,3 +457,19 @@ func RunLab(l *lab.Lab, p *progress.Progress, targetURL string) error {
 	_, err := prog.Run()
 	return err
 }
+
+// AttachLab resumes a TUI lab session without resetting start time.
+// Use when attaching to an already-running lab container.
+func AttachLab(l *lab.Lab, p *progress.Progress, targetURL string) error {
+	// Update last_played timestamp only
+	p.StartLab(l.Name)
+	_ = p.Save()
+
+	prog := tea.NewProgram(
+		NewLab(l, p, targetURL),
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
+	)
+	_, err := prog.Run()
+	return err
+}

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"hacklab/internal/lab"
+	"hacklab/internal/store"
 )
 
 // Manager handles Docker operations for labs via the docker CLI
@@ -141,35 +142,86 @@ func (m *Manager) WaitForReady(url string, timeoutSecs int) error {
 	return fmt.Errorf("timed out waiting for %s", url)
 }
 
-// Stop stops a lab by name
+// Stop stops a lab by name, handling both single-container and compose labs.
 func Stop(labName string) error {
 	containerName := fmt.Sprintf("hacklab-%s", labName)
 
-	// Fallback: stop single container
-	stopCmd := exec.Command("docker", "stop", containerName)
-	stopCmd.Stdout = nil
-	stopCmd.Stderr = nil
-	if err := stopCmd.Run(); err != nil {
+	// Check for any running containers with this lab's label
+	cmd := exec.Command("docker", "ps",
+		"--filter", fmt.Sprintf("label=hacklab.lab=%s", labName),
+		"--format", "{{.Names}}")
+	output, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("querying containers: %w", err)
+	}
+
+	var running []string
+	for _, n := range strings.Split(strings.TrimSpace(string(output)), "\n") {
+		n = strings.TrimSpace(n)
+		if n != "" {
+			running = append(running, n)
+		}
+	}
+
+	if len(running) == 0 {
 		fmt.Printf("  ℹ️  No running lab '%s' found\n", labName)
 		return nil
 	}
 
-	// Try docker compose as a fallback
-	cmd := exec.Command("docker", "compose", "-p", containerName, "down", "-v")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err == nil {
-		fmt.Printf("  ✅ Lab '%s' stopped\n", labName)
-		return nil
+	fmt.Printf("  🛑 Stopping lab '%s' (%d container(s))...\n", labName, len(running))
+
+	// Try docker compose first (for multi-container labs)
+	if labPath, err := store.LabPath(labName); err == nil {
+		if _, statErr := os.Stat(labPath); statErr == nil {
+			composeFile := findComposeFile(labPath)
+			if composeFile != "" {
+				fmt.Printf("  📦 Running docker compose down...\n")
+				downCmd := exec.Command("docker", "compose",
+					"-p", containerName,
+					"-f", composeFile,
+					"down", "--volumes")
+				downCmd.Stdout = os.Stdout
+				downCmd.Stderr = os.Stderr
+				if err := downCmd.Run(); err == nil {
+					fmt.Printf("  ✅ Lab '%s' stopped\n", labName)
+					return nil
+				}
+				fmt.Printf("  ⚠️  docker compose down failed, stopping containers individually\n")
+			}
+		}
 	}
 
-	rmCmd := exec.Command("docker", "rm", containerName)
-	rmCmd.Stdout = nil
-	rmCmd.Stderr = nil
-	_ = rmCmd.Run()
+	// Fallback: stop individual containers (single-container or compose fallback)
+	for _, name := range running {
+		stopCmd := exec.Command("docker", "stop", name)
+		stopCmd.Stdout = nil
+		stopCmd.Stderr = nil
+		_ = stopCmd.Run()
+
+		rmCmd := exec.Command("docker", "rm", name)
+		rmCmd.Stdout = nil
+		rmCmd.Stderr = nil
+		_ = rmCmd.Run()
+	}
 
 	fmt.Printf("  ✅ Lab '%s' stopped\n", labName)
 	return nil
+}
+
+// findComposeFile searches for a docker-compose file in the lab directory.
+func findComposeFile(dir string) string {
+	entries, _ := os.ReadDir(dir)
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if name == "docker-compose.yml" || name == "docker-compose.yaml" ||
+			name == "compose.yml" || name == "compose.yaml" {
+			return filepath.Join(dir, name)
+		}
+	}
+	return ""
 }
 
 // ListRunning shows all hacklab containers
