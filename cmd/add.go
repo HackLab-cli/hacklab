@@ -17,11 +17,13 @@ import (
 // expanded to the full repo URL with the path as a subdirectory.
 //
 // Examples:
-//   examples/sqli-lab  →  https://github.com/HackLab-cli/lab-examples#examples/sqli-lab
+//   examples/sqli-lab   →  https://github.com/HackLab-cli/lab-examples#examples/sqli-lab
 //   examples/juice-shop →  https://github.com/HackLab-cli/lab-examples#examples/juice-shop
-//   my-org/sqli-lab    →  https://github.com/my-org/labs#my-org/sqli-lab
+//   official/dvna       →  https://github.com/HackLab-cli/official-labs#official/dvna
+//   official/dvwa       →  https://github.com/HackLab-cli/official-labs#official/dvwa
 var aliasMap = map[string]string{
 	"examples": "https://github.com/HackLab-cli/lab-examples",
+	"official": "https://github.com/HackLab-cli/official-labs",
 }
 
 // resolveAlias checks if source matches a known alias prefix (e.g. "examples/sqli-lab").
@@ -60,6 +62,13 @@ Examples:
 
   # Specific subdirectory (repo#path)
   hacklab add https://github.com/HackLab-cli/lab-examples#labs/juice-shop
+
+  # Official lab shorthand
+  hacklab add official/dvwa
+  hacklab add official/dvna
+
+  # Example lab shorthand
+  hacklab add examples/sqli-lab
 
   # Local folder
   hacklab add ./my-labs/sqli-lab
