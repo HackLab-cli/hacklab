@@ -50,8 +50,31 @@ hacklab --help
 | `hacklab start <slug>` | Spin up Docker containers and launch the interactive TUI |
 | `hacklab status` | Show currently running labs |
 | `hacklab stop <slug>` | Tear down a lab's containers |
-| `hacklab add <source>` | Install a lab from a git repo or local path |
+| `hacklab add <source>` | Install a lab from a git repo, alias, or local path |
 | `hacklab remove <slug>` | Remove a lab from your collection |
+
+## Lab Aliases
+
+HackLab includes shorthand aliases for popular lab collections:
+
+| Alias | Repository | Example |
+|-------|-----------|---------|
+| `official` | [HackLab-cli/official-labs](https://github.com/HackLab-cli/official-labs) | `hacklab add official/dvwa` |
+| `examples` | [HackLab-cli/lab-examples](https://github.com/HackLab-cli/lab-examples) | `hacklab add examples/juice-shop` |
+
+```bash
+# Add an official lab
+hacklab add official/dvwa
+hacklab add official/webgoat
+hacklab add official/dvna
+
+# Add an example lab
+hacklab add examples/sqli-lab
+hacklab add examples/juice-shop
+
+# Or use full git URLs
+hacklab add https://github.com/user/my-labs#path/to/lab
+```
 
 ## Interactive TUI
 
@@ -85,7 +108,7 @@ Progress saves automatically to `~/.hacklab/progress.json`.
 
 ## Starting guide
 
-The first time you install `hacklab` without prior labs, it will guide you through the process and how to add some example labs!
+The first time you install `hacklab` without prior labs, it will guide you through the process and how to add some example labs! You can also browse official labs with `hacklab add official/<name>` — see the [official-labs repo](https://github.com/HackLab-cli/official-labs) for the full list.
 
 ## Lab Format
 
